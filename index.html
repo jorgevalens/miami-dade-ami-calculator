@@ -319,6 +319,7 @@
                             pattern="[0-9]*[.,]?[0-9]*">
                         <span>(Suggested range: 2-5%)</span>
                     </div>
+                    <div id="closingCostError" class="error" role="alert"></div>
                 </div>
 
                 <div class="form-group">
@@ -337,6 +338,7 @@
                             pattern="[0-9]*[.,]?[0-9]*">
                         <span>(Suggested range: 0.5-1%)</span>
                     </div>
+                    <div id="setupFeeError" class="error" role="alert"></div>
                 </div>
 
                 <div class="button-group">
@@ -696,7 +698,7 @@
             updateFinalReportButton();
         }
 
-         function resetRecordingCalculator() {
+        function resetRecordingCalculator() {
             // Reset form
             document.getElementById('recordingCalculator').reset();
             
@@ -751,10 +753,16 @@
                 // Create new PDF document
                 const doc = new jsPDF();
                 
+                // Set default font
+                doc.setFont('helvetica');
+                
                 // Add header with logo
                 doc.setFontSize(20);
+                doc.setTextColor(0, 102, 204); // Blue color
                 doc.text('Miami-Dade County Homeownership Specialist Report', 20, 20);
+                
                 doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0); // Black color
                 doc.text('Generated on: ' + new Date().toLocaleDateString(), 20, 30);
                 
                 // Create a table for all results
@@ -808,30 +816,34 @@
                     styles: {
                         fontSize: 10,
                         cellPadding: 5,
+                        font: 'helvetica'
                     },
                     headStyles: {
                         fillColor: [0, 102, 204],
                         textColor: 255,
                         fontSize: 12,
                         fontStyle: 'bold',
+                        font: 'helvetica'
                     },
                     columnStyles: {
                         0: { 
                             cellWidth: 60,
                             fontStyle: 'bold',
-                            fillColor: [240, 240, 240]
+                            fillColor: [240, 240, 240],
+                            font: 'helvetica'
                         },
                         1: { 
-                            cellWidth: 130
+                            cellWidth: 130,
+                            font: 'helvetica'
                         }
                     },
                     didDrawCell: function(data) {
                         // Make section headers bold and blue
                         if (data.section === 'body' && data.row.index === 0) {
-                            doc.setFont(undefined, 'bold');
+                            doc.setFont('helvetica', 'bold');
                             doc.setTextColor(0, 102, 204);
                         } else {
-                            doc.setFont(undefined, 'normal');
+                            doc.setFont('helvetica', 'normal');
                             doc.setTextColor(0, 0, 0);
                         }
                     }
@@ -842,6 +854,7 @@
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
                     doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100); // Gray color
                     doc.text('Page ' + i + ' of ' + pageCount, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
                 }
                 
