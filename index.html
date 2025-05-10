@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miami-Dade County Homeownership Specialist Calculator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            line-height: 1.5;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 200px;
+            height: 100px;
+            object-fit: contain;
+            margin-right: 1.5rem;
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
+        .calculator {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .calculator h2 {
+            margin-top: 0;
+            color: #0066CC;
+            border-bottom: 2px solid #0066CC;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .percentage-input {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .percentage-input input {
+            width: 100px;
+        }
+
+        .percentage-input span {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background-color: #0066CC;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #0055AA;
+        }
+
+        button:focus {
+            outline: 3px solid #80bdff;
+            outline-offset: 2px;
+        }
+
+        button[type="submit"] {
+            background-color: #669933;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #558822;
+        }
+
+        button.reset {
+            background-color: #0066CC;
+        }
+
+        button.reset:hover {
+            background-color: #0055AA;
+        }
+
+        button.copy {
+            background-color: #6c757d;
+        }
+
+        button.copy:hover {
+            background-color: #5a6268;
+        }
+
+        button.pdf {
+            background-color: #dc3545;
+        }
+
+        button.pdf:hover {
+            background-color: #bb2d3b;
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 4px;
+            background-color: #e9ecef;
+            display: none;
+        }
+
+        .result[aria-hidden="false"] {
+            display: block;
+        }
+
+        .error {
+            color: #dc3545;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .range-info {
+            margin-top: 0.5rem;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .eligibility-ineligible {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .eligibility-eligible {
+            color: #198754;
+            font-weight: bold;
+        }
+
+        .fee-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .fee-result[aria-hidden="false"] {
+            display: block;
+        }
+
+        .final-report {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        button.final-report {
+            background-color: #198754;
+            font-size: 1.2rem;
+            padding: 1rem 2rem;
+        }
+
+        button.final-report:hover {
+            background-color: #157347;
+        }
+
+        button.final-report:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+            }
+        }
+    </style>
+    <!-- Add jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+    </script>
+</head>
+<body>
+    <main>
+        <div class="header">
+            <img src="https://www.miamidade.gov/branding/images/miami-dade-county-logo.JPG" 
+                 alt="Miami-Dade County Logo" 
+                 class="logo">
+            <div class="header-content">
+                <h1>Miami-Dade County Homeownership Specialist Calculator</h1>
+                <p>Tools to assist with homeownership program calculations and estimates.</p>
+            </div>
+        </div>
+        
+        <div class="calculator">
+            <h2>AMI Calculator</h2>
+            <form id="amiCalculator" onsubmit="calculateAMI(event)">
+                <div class="form-group">
+                    <label for="familySize">Number of Family Members (1-10):</label>
+                    <input 
+                        type="number" 
+                        id="familySize" 
+                        name="familySize" 
+                        min="1" 
+                        max="10" 
+                        required 
+                        aria-describedby="familySizeError"
+                        inputmode="numeric"
+                        pattern="[0-9]*">
+                    <div id="familySizeError" class="error" role="alert"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="income">Annual Household Income ($):</label>
+                    <input 
+                        type="number" 
+                        id="income" 
+                        name="income" 
+                        min="0" 
+                        required 
+                        aria-describedby="incomeError"
+                        inputmode="numeric"
+                        pattern="[0-9]*">
+                    <div id="incomeError" class="error" role="alert"></div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit">Calculate</button>
+                    <button type="button" class="reset" onclick="resetCalculator()">Reset</button>
+                </div>
+            </form>
+
+            <div id="result" class="result" aria-hidden="true" role="region" aria-live="polite">
+                <h2>Results</h2>
+                <p id="resultText"></p>
+                <p id="categoryText"></p>
+                <p id="rangeInfo" class="range-info"></p>
+                <p id="eligibilityText"></p>
+                <div class="button-group">
+                    <button type="button" class="copy" onclick="copyResults()">Copy Results</button>
+                    <button type="button" class="pdf" onclick="generatePDF()">Generate PDF Report</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator">
+            <h2>Loan Commitment Fees Estimator</h2>
+            <form id="feeCalculator" onsubmit="calculateFees(event)">
+                <div class="form-group">
+                    <label for="assessmentAmount">Special Assessment Amount ($):</label>
+                    <input 
+                        type="number" 
+                        id="assessmentAmount" 
+                        name="assessmentAmount" 
+                        min="0" 
+                        required 
+                        aria-describedby="assessmentError"
+                        inputmode="numeric"
+                        pattern="[0-9]*">
+                    <div id="assessmentError" class="error" role="alert"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="closingCostPercent">Closing Cost Percentage:</label>
+                    <div class="percentage-input">
+                        <input 
+                            type="number" 
+                            id="closingCostPercent" 
+                            name="closingCostPercent" 
+                            min="2" 
+                            max="5" 
+                            step="0.1"
+                            value="3.5"
+                            required
+                            inputmode="decimal"
+                            pattern="[0-9]*[.,]?[0-9]*">
+                        <span>(Suggested range: 2-5%)</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="setupFeePercent">Setup Fee Percentage:</label>
+                    <div class="percentage-input">
+                        <input 
+                            type="number" 
+                            id="setupFeePercent" 
+                            name="setupFeePercent" 
+                            min="0.5" 
+                            max="1" 
+                            step="0.1"
+                            value="0.5"
+                            required
+                            inputmode="decimal"
+                            pattern="[0-9]*[.,]?[0-9]*">
+                        <span>(Suggested range: 0.5-1%)</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit">Calculate Fees</button>
+                    <button type="button" class="reset" onclick="resetFeeCalculator()">Reset</button>
+                </div>
+            </form>
+
+            <div id="feeResult" class="fee-result" aria-hidden="true" role="region" aria-live="polite">
+                <h2>Fee Estimates</h2>
+                <p id="closingCostText"></p>
+                <p id="setupFeeText"></p>
+                <p id="totalFeesText"></p>
+                <div class="button-group">
+                    <button type="button" class="copy" onclick="copyFeeResults()">Copy Results</button>
+                    <button type="button" class="pdf" onclick="generatePDF()">Generate PDF Report</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="calculator">
+            <h2>Recording Fee Estimator</h2>
+            <form id="recordingCalculator" onsubmit="calculateRecordingFees(event)">
+                <div class="form-group">
+                    <label for="pageCount">Number of Pages in Loan Commitment Package:</label>
+                    <input 
+                        type="number" 
+                        id="pageCount" 
+                        name="pageCount" 
+                        min="1" 
+                        required 
+                        aria-describedby="pageCountError"
+                        inputmode="numeric"
+                        pattern="[0-9]*">
+                    <div id="pageCountError" class="error" role="alert"></div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit">Calculate Recording Fees</button>
+                    <button type="button" class="reset" onclick="resetRecordingCalculator()">Reset</button>
+                </div>
+            </form>
+
+            <div id="recordingResult" class="fee-result" aria-hidden="true" role="region" aria-live="polite">
+                <h2>Recording Fee Estimate</h2>
+                <p id="firstPageText"></p>
+                <p id="additionalPagesText"></p>
+                <p id="totalRecordingText"></p>
+                <div class="button-group">
+                    <button type="button" class="copy" onclick="copyRecordingResults()">Copy Results</button>
+                    <button type="button" class="pdf" onclick="generatePDF()">Generate PDF Report</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="final-report">
+        <button type="button" class="final-report" id="finalReportBtn" onclick="generateFinalReport()" disabled>Generate Final Report</button>
+    </div>
+
+    <script>
+        const amiData = {
+            baseAMI: 79400,
+            limits: {
+                1: [23850, 39750, 63550, 95400],
+                2: [27250, 45400, 72650, 108960],
+                3: [30650, 51050, 81700, 122520],
+                4: [34050, 56750, 90800, 136200],
+                5: [36800, 61300, 98100, 147120],
+                6: [41960, 65850, 105350, 158040],
+                7: [47340, 70400, 112600, 168960],
+                8: [52720, 74950, 119900, 179880],
+                9: [58100, 79450, 127150, 190680],
+                10: [63480, 84000, 122200, 201576]
+            }
+        };
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function calculateAMI(event) {
+            event.preventDefault();
+            
+            // Reset error messages
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+            
+            // Get input values
+            const familySize = parseInt(document.getElementById('familySize').value);
+            const income = parseFloat(document.getElementById('income').value);
+            
+            // Validate inputs
+            if (familySize < 1 || familySize > 10) {
+                const error = document.getElementById('familySizeError');
+                error.textContent = 'Please enter a family size between 1 and 10';
+                error.style.display = 'block';
+                return;
+            }
+
+            if (income < 0) {
+                const error = document.getElementById('incomeError');
+                error.textContent = 'Please enter a valid income amount';
+                error.style.display = 'block';
+                return;
+            }
+
+            // Get income limits for family size
+            const limits = amiData.limits[familySize];
+            
+            // Calculate percentage of AMI
+            const percentageOfAMI = (income / amiData.baseAMI) * 100;
+            
+            // Determine income category and range information
+            let category;
+            let rangeInfo;
+
+            if (income <= limits[0]) {
+                category = 'Extremely Low Income';
+                rangeInfo = `For a family of ${familySize}, Extremely Low Income is ${formatCurrency(0)} to ${formatCurrency(limits[0])}`;
+            } else if (income <= limits[1]) {
+                category = 'Very Low Income';
+                rangeInfo = `For a family of ${familySize}, Very Low Income is ${formatCurrency(limits[0])} to ${formatCurrency(limits[1])}`;
+            } else if (income <= limits[2]) {
+                category = 'Low Income';
+                rangeInfo = `For a family of ${familySize}, Low Income is ${formatCurrency(limits[1])} to ${formatCurrency(limits[2])}`;
+            } else if (income <= limits[3]) {
+                category = 'Income within 120% AMI';
+                rangeInfo = `For a family of ${familySize}, Income within 120% AMI is ${formatCurrency(limits[2])} to ${formatCurrency(limits[3])}`;
+            } else {
+                category = 'Income more than 120% Area Median Income (AMI)';
+                rangeInfo = `For a family of ${familySize}, income above ${formatCurrency(limits[3])} is more than 120% AMI`;
+            }
+
+            // Display results
+            const resultDiv = document.getElementById('result');
+            const resultText = document.getElementById('resultText');
+            const categoryText = document.getElementById('categoryText');
+            const rangeInfoText = document.getElementById('rangeInfo');
+            const eligibilityText = document.getElementById('eligibilityText');
+            
+            resultText.textContent = `Your income of ${formatCurrency(income)} is ${percentageOfAMI.toFixed(1)}% of the Area Median Income.`;
+            categoryText.textContent = `Category: ${category}`;
+            rangeInfoText.textContent = rangeInfo;
+
+            // Determine loan eligibility
+            let eligibilityMessage;
+            if (percentageOfAMI <= 80) {
+                eligibilityMessage = "Eligible for: Standard 40-year loan capped at $50 per month";
+                eligibilityText.className = "eligibility-eligible";
+            } else if (percentageOfAMI <= 140) {
+                eligibilityMessage = "Eligible for: Standard 40-year loan";
+                eligibilityText.className = "eligibility-eligible";
+            } else {
+                eligibilityMessage = "Ineligible for loan program";
+                eligibilityText.className = "eligibility-ineligible";
+            }
+            eligibilityText.textContent = eligibilityMessage;
+            
+            resultDiv.setAttribute('aria-hidden', 'false');
+            updateFinalReportButton();
+        }
+
+        function copyResults() {
+            const resultText = document.getElementById('resultText').textContent;
+            const categoryText = document.getElementById('categoryText').textContent;
+            const rangeInfo = document.getElementById('rangeInfo').textContent;
+            const eligibilityText = document.getElementById('eligibilityText').textContent;
+            
+            const textToCopy = `${resultText}\n${categoryText}\n${rangeInfo}\n${eligibilityText}`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyButton = document.querySelector('button.copy');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        function resetCalculator() {
+            // Reset form
+            document.getElementById('amiCalculator').reset();
+            
+            // Hide results
+            const resultDiv = document.getElementById('result');
+            resultDiv.setAttribute('aria-hidden', 'true');
+            
+            // Clear error messages
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+        }
+
+        // Add input validation
+        document.getElementById('familySize').addEventListener('input', function(e) {
+            const error = document.getElementById('familySizeError');
+            if (this.value < 1 || this.value > 10) {
+                error.textContent = 'Please enter a family size between 1 and 10';
+                error.style.display = 'block';
+            } else {
+                error.style.display = 'none';
+            }
+        });
+
+        document.getElementById('income').addEventListener('input', function(e) {
+            const error = document.getElementById('incomeError');
+            if (this.value < 0) {
+                error.textContent = 'Please enter a valid income amount';
+                error.style.display = 'block';
+            } else {
+                error.style.display = 'none';
+            }
+        });
+
+        function calculateFees(event) {
+            event.preventDefault();
+            
+            // Reset error messages
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+            
+            // Get input values
+            const assessmentAmount = parseFloat(document.getElementById('assessmentAmount').value);
+            const closingCostPercent = parseFloat(document.getElementById('closingCostPercent').value);
+            const setupFeePercent = parseFloat(document.getElementById('setupFeePercent').value);
+            
+            // Validate inputs
+            if (assessmentAmount < 0) {
+                const error = document.getElementById('assessmentError');
+                error.textContent = 'Please enter a valid assessment amount';
+                error.style.display = 'block';
+                return;
+            }
+
+            if (closingCostPercent < 2 || closingCostPercent > 5) {
+                const error = document.getElementById('closingCostError');
+                error.textContent = 'Closing cost percentage must be between 2% and 5%';
+                error.style.display = 'block';
+                return;
+            }
+
+            if (setupFeePercent < 0.5 || setupFeePercent > 1) {
+                const error = document.getElementById('setupFeeError');
+                error.textContent = 'Setup fee percentage must be between 0.5% and 1%';
+                error.style.display = 'block';
+                return;
+            }
+
+            // Calculate fees
+            const closingCost = assessmentAmount * (closingCostPercent / 100);
+            const setupFee = assessmentAmount * (setupFeePercent / 100);
+            const totalFees = closingCost + setupFee;
+
+            // Display results
+            const feeResultDiv = document.getElementById('feeResult');
+            const closingCostText = document.getElementById('closingCostText');
+            const setupFeeText = document.getElementById('setupFeeText');
+            const totalFeesText = document.getElementById('totalFeesText');
+            
+            closingCostText.textContent = `Closing Costs (${closingCostPercent}%): ${formatCurrency(closingCost)}`;
+            setupFeeText.textContent = `Setup Fee (${setupFeePercent}%): ${formatCurrency(setupFee)}`;
+            totalFeesText.textContent = `Total Fees: ${formatCurrency(totalFees)}`;
+            
+            feeResultDiv.setAttribute('aria-hidden', 'false');
+            updateFinalReportButton();
+        }
+
+        function resetFeeCalculator() {
+            // Reset form
+            document.getElementById('feeCalculator').reset();
+            
+            // Hide results
+            const feeResultDiv = document.getElementById('feeResult');
+            feeResultDiv.setAttribute('aria-hidden', 'true');
+            
+            // Clear error messages
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+        }
+
+        function copyFeeResults() {
+            const closingCostText = document.getElementById('closingCostText').textContent;
+            const setupFeeText = document.getElementById('setupFeeText').textContent;
+            const totalFeesText = document.getElementById('totalFeesText').textContent;
+            
+            const textToCopy = `${closingCostText}\n${setupFeeText}\n${totalFeesText}`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyButton = document.querySelector('#feeResult button.copy');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Add input validation for fee calculator
+        document.getElementById('closingCostPercent').addEventListener('input', function(e) {
+            const error = document.getElementById('closingCostError');
+            if (this.value < 2 || this.value > 5) {
+                error.textContent = 'Closing cost percentage must be between 2% and 5%';
+                error.style.display = 'block';
+            } else {
+                error.style.display = 'none';
+            }
+        });
+
+        document.getElementById('setupFeePercent').addEventListener('input', function(e) {
+            const error = document.getElementById('setupFeeError');
+            if (this.value < 0.5 || this.value > 1) {
+                error.textContent = 'Setup fee percentage must be between 0.5% and 1%';
+                error.style.display = 'block';
+            } else {
+                error.style.display = 'none';
+            }
+        });
+
+        function calculateRecordingFees(event) {
+            event.preventDefault();
+            
+            // Reset error messages
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+            
+            // Get input values
+            const pageCount = parseInt(document.getElementById('pageCount').value);
+            
+            // Validate inputs
+            if (pageCount < 1) {
+                const error = document.getElementById('pageCountError');
+                error.textContent = 'Please enter a valid number of pages (minimum 1)';
+                error.style.display = 'block';
+                return;
+            }
+
+            // Calculate fees
+            const firstPageFee = 8.50;
+            const additionalPagesFee = (pageCount - 1) * 4.50;
+            const totalRecordingFee = firstPageFee + additionalPagesFee;
+
+            // Display results
+            const recordingResultDiv = document.getElementById('recordingResult');
+            const firstPageText = document.getElementById('firstPageText');
+            const additionalPagesText = document.getElementById('additionalPagesText');
+            const totalRecordingText = document.getElementById('totalRecordingText');
+            
+            firstPageText.textContent = `First Page Fee: ${formatCurrency(firstPageFee)}`;
+            additionalPagesText.textContent = `Additional Pages (${pageCount - 1} pages): ${formatCurrency(additionalPagesFee)}`;
+            totalRecordingText.textContent = `Total Recording Fee: ${formatCurrency(totalRecordingFee)}`;
+            
+            recordingResultDiv.setAttribute('aria-hidden', 'false');
+            updateFinalReportButton();
+        }
+
+         function resetRecordingCalculator() {
+            // Reset form
+            document.getElementById('recordingCalculator').reset();
+            
+            // Hide results
+            const recordingResultDiv = document.getElementById('recordingResult');
+            recordingResultDiv.setAttribute('aria-hidden', 'true');
+            
+            // Clear error messages
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+        }
+
+        function copyRecordingResults() {
+            const firstPageText = document.getElementById('firstPageText').textContent;
+            const additionalPagesText = document.getElementById('additionalPagesText').textContent;
+            const totalRecordingText = document.getElementById('totalRecordingText').textContent;
+            
+            const textToCopy = `${firstPageText}\n${additionalPagesText}\n${totalRecordingText}`;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyButton = document.querySelector('#recordingResult button.copy');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        // Add input validation for recording calculator
+        document.getElementById('pageCount').addEventListener('input', function(e) {
+            const error = document.getElementById('pageCountError');
+            if (this.value < 1) {
+                error.textContent = 'Please enter a valid number of pages (minimum 1)';
+                error.style.display = 'block';
+            } else {
+                error.style.display = 'none';
+            }
+        });
+
+        function updateFinalReportButton() {
+            const amiResults = document.getElementById('result').getAttribute('aria-hidden') === 'false';
+            const feeResults = document.getElementById('feeResult').getAttribute('aria-hidden') === 'false';
+            const recordingResults = document.getElementById('recordingResult').getAttribute('aria-hidden') === 'false';
+            
+            document.getElementById('finalReportBtn').disabled = !(amiResults && feeResults && recordingResults);
+        }
+
+        function generateFinalReport() {
+            try {
+                // Create new PDF document
+                const doc = new jsPDF();
+                
+                // Add header with logo
+                doc.setFontSize(20);
+                doc.text('Miami-Dade County Homeownership Specialist Report', 20, 20);
+                doc.setFontSize(12);
+                doc.text('Generated on: ' + new Date().toLocaleDateString(), 20, 30);
+                
+                // Create a table for all results
+                const results = [];
+                
+                // AMI Calculator Results
+                results.push(['AMI Calculator Results', '']);
+                const familySize = document.getElementById('familySize').value;
+                const income = document.getElementById('income').value;
+                results.push(['Family Size:', familySize]);
+                results.push(['Annual Income:', formatCurrency(parseFloat(income))]);
+                results.push(['', '']); // Spacer
+                results.push(['Results:', '']);
+                results.push(['', document.getElementById('resultText').textContent]);
+                results.push(['', document.getElementById('categoryText').textContent]);
+                results.push(['', document.getElementById('rangeInfo').textContent]);
+                results.push(['', document.getElementById('eligibilityText').textContent]);
+                results.push(['', '']); // Spacer
+                
+                // Fee Calculator Results
+                results.push(['Fee Calculator Results', '']);
+                const assessmentAmount = document.getElementById('assessmentAmount').value;
+                const closingCostPercent = document.getElementById('closingCostPercent').value;
+                const setupFeePercent = document.getElementById('setupFeePercent').value;
+                results.push(['Assessment Amount:', formatCurrency(parseFloat(assessmentAmount))]);
+                results.push(['Closing Cost %:', closingCostPercent + '%']);
+                results.push(['Setup Fee %:', setupFeePercent + '%']);
+                results.push(['', '']); // Spacer
+                results.push(['Results:', '']);
+                results.push(['', document.getElementById('closingCostText').textContent]);
+                results.push(['', document.getElementById('setupFeeText').textContent]);
+                results.push(['', document.getElementById('totalFeesText').textContent]);
+                results.push(['', '']); // Spacer
+                
+                // Recording Fee Results
+                results.push(['Recording Fee Results', '']);
+                const totalPages = document.getElementById('pageCount').value;
+                results.push(['Number of Pages:', totalPages]);
+                results.push(['', '']); // Spacer
+                results.push(['Results:', '']);
+                results.push(['', document.getElementById('firstPageText').textContent]);
+                results.push(['', document.getElementById('additionalPagesText').textContent]);
+                results.push(['', document.getElementById('totalRecordingText').textContent]);
+                
+                // Add the table to the PDF
+                doc.autoTable({
+                    startY: 40,
+                    head: [['Section', 'Details']],
+                    body: results,
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 10,
+                        cellPadding: 5,
+                    },
+                    headStyles: {
+                        fillColor: [0, 102, 204],
+                        textColor: 255,
+                        fontSize: 12,
+                        fontStyle: 'bold',
+                    },
+                    columnStyles: {
+                        0: { 
+                            cellWidth: 60,
+                            fontStyle: 'bold',
+                            fillColor: [240, 240, 240]
+                        },
+                        1: { 
+                            cellWidth: 130
+                        }
+                    },
+                    didDrawCell: function(data) {
+                        // Make section headers bold and blue
+                        if (data.section === 'body' && data.row.index === 0) {
+                            doc.setFont(undefined, 'bold');
+                            doc.setTextColor(0, 102, 204);
+                        } else {
+                            doc.setFont(undefined, 'normal');
+                            doc.setTextColor(0, 0, 0);
+                        }
+                    }
+                });
+                
+                // Add footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(10);
+                    doc.text('Page ' + i + ' of ' + pageCount, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                }
+                
+                // Save the PDF
+                doc.save('miami-dade-homeownership-final-report.pdf');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('There was an error generating the PDF. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html> 
